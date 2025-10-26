@@ -1,0 +1,6 @@
+@WealthBackend_HostAddress = http://localhost:5244
+
+GET {{WealthBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
