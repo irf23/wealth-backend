@@ -19,7 +19,7 @@ Backend-focused take-home assignment implementing a REST API for asset managemen
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/irf23/wealth-backend.git
 cd wealth-backend
 ```
 
