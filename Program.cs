@@ -1,11 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using WealthBackend.Data;
+using WealthBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<WealthDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<DataImportService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -24,6 +27,15 @@ var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
+
+// Data import endpoint
+app.MapPost("/api/import", async (DataImportService importService) =>
+{
+    var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "assets.json");
+    var count = await importService.ImportAssetsFromJsonAsync(jsonPath);
+    return Results.Ok(new { Message = $"Successfully imported {count} assets", Count = count });
+})
+.WithName("ImportAssets");
 
 app.MapGet("/weatherforecast", () =>
 {
