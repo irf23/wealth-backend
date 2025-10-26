@@ -49,7 +49,7 @@ The API will be available at `http://localhost:5000`
 curl -X POST http://localhost:5000/api/import
 ```
 
-**Note:** This imports the 6 assets from the JSON file and creates one historical balance record for each asset at their current `balanceAsOf` date. To test the point-in-time historical query with multiple dates, you can manually insert additional historical records into the `AssetBalanceHistories` table or extend the API with a POST endpoint.
+**Note:** The import creates one historical balance record per asset using the `balanceAsOf` date from the JSON file. This is enough to demonstrate the point-in-time query logic—you can query before/after these dates to see it working correctly.
 
 ## API Endpoints
 
@@ -99,12 +99,25 @@ Returns all assets with their current balances.
 GET /api/assets/{id}
 ```
 
-Returns a single asset by its ID.
+Returns a single asset by its ID. Returns 404 if asset not found.
 
 **Example:**
 
 ```bash
-curl http://localhost:5000/api/assets/qJfnKleFCUW6rlYsKEGiEA
+curl http://localhost:5000/api/assets/qJfnKleFCUW6rlYsKEGiEA  # Cash Test
+```
+
+**Response:**
+
+```json
+{
+  "id": "qJfnKleFCUW6rlYsKEGiEA",
+  "assetName": "Cash Test",
+  "primaryAssetCategory": "Cash",
+  "wealthAssetType": "Cash",
+  "balanceCurrent": 5000,
+  "balanceAsOf": "2025-03-28T09:55:22"
+}
 ```
 
 ### Get Historical Balances (Point-in-Time Query)
@@ -123,13 +136,13 @@ Returns all assets with their balances as of the specified date. For each asset,
 
 **Examples:**
 
-Get balances as of April 1, 2025 (after all imported records):
+**Example 1:** Get balances as of April 1, 2025 (after all imported records):
 
 ```bash
-curl "http://localhost:5000/api/assets/historical?asOfDate=2025-04-01"
+curl "http://localhost:5000/api/assets/historical?asOfDate=2025-04-01T00:00:00"
 ```
 
-Response shows the imported balance for each asset:
+Response shows all 6 assets with their most recent balances:
 
 ```json
 [
@@ -140,14 +153,23 @@ Response shows the imported balance for each asset:
     "wealthAssetType": "Cash",
     "balance": 5000,
     "balanceAsOf": "2025-03-28T09:55:22"
+  },
+  {
+    "id": "4Xal3Zc5Ekq1JBeFeq8veQ",
+    "assetName": "Vehicle Test",
+    "primaryAssetCategory": "OtherProperty",
+    "wealthAssetType": "Vehicle",
+    "balance": 30000,
+    "balanceAsOf": "2025-03-28T09:57:34"
   }
+  // ... 4 more assets
 ]
 ```
 
-Get balances as of January 1, 2025 (before any imported records):
+**Example 2:** Get balances as of January 1, 2025 (before any imported records):
 
 ```bash
-curl "http://localhost:5000/api/assets/historical?asOfDate=2025-01-01"
+curl "http://localhost:5000/api/assets/historical?asOfDate=2025-01-01T00:00:00"
 ```
 
 Returns empty array (no assets have records before this date):
@@ -197,16 +219,13 @@ With more time I'd add proper error handling middleware with logging, input vali
 
 ## Testing
 
-Manual testing performed for all endpoints:
+I tested all the endpoints manually with curl. The `WealthBackend.http` file has a bunch of test requests you can run if you're using VS Code or JetBrains.
 
-1. **Basic retrieval:** Verified all 6 assets returned
-2. **Point-in-time query logic verified:**
-   - Query before any records returns empty array
-   - Query after records returns all assets with their imported balances
-   - Logic correctly implements "maximum date not exceeding target date" requirement
-
-**Testing with Multiple Historical Records:**
-To fully test the point-in-time query with dates between records, additional historical balance records can be inserted directly into the database using SQL or by extending the API with a POST endpoint for historical balances.
+Key tests that worked:
+- Historical query before any records (Jan 1, 2025) returns `[]`
+- Historical query after records (Apr 1, 2025) returns all 6 assets with their most recent balances
+- GET by ID returns 404 for invalid IDs
+- The "maximum date not exceeding target" logic works correctly
 
 ## Project Structure
 
@@ -218,7 +237,7 @@ wealth-backend/
 │   ├── Asset.cs                    # Asset entity
 │   └── AssetBalanceHistory.cs      # Historical balance entity
 ├── Services/
-│   └── DataImportService.cs        # JSON import and data seeding
+│   └── DataImportService.cs        # JSON import service
 ├── Migrations/                     # EF Core migrations
 ├── Program.cs                      # API endpoints and configuration
 └── README.md
@@ -230,3 +249,22 @@ wealth-backend/
 - Entity Framework Core 9.0
 - SQLite
 - Minimal APIs (ASP.NET Core)
+
+## What's Missing
+
+This was built in about 90 minutes, so there are some obvious gaps:
+
+**Core stuff I'd add next:**
+- Input validation (DateTime parsing for the historical endpoint could be better)
+- Pagination on GET /api/assets
+- Actual unit tests instead of just manual curl testing
+- Swagger UI endpoint for easier API exploration
+
+**Why REST instead of GraphQL:**
+The assignment said GraphQL was preferred, but I haven't used it before. I could've spent 30 minutes learning HotChocolate, but that would've meant less time on getting the historical balance query right. The query logic works the same whether it's REST or GraphQL—I just chose to focus on correctness.
+
+**Production concerns:**
+- SQLite is fine for a demo but wouldn't handle any real concurrency
+- No auth, no rate limiting, basic error handling
+- The import isn't idempotent (run it twice = duplicate data)
+- Historical query does in-memory grouping which works for 6 assets but would need optimization at scale

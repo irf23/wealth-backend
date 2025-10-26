@@ -1,6 +1,55 @@
-@WealthBackend_HostAddress = http://localhost:5244
+@WealthBackend_HostAddress = http://localhost:5000
 
-GET {{WealthBackend_HostAddress}}/weatherforecast/
+### 1. Import Assets from JSON
+POST {{WealthBackend_HostAddress}}/api/import
+Accept: application/json
+
+###
+
+### 2. Get All Assets
+GET {{WealthBackend_HostAddress}}/api/assets
+Accept: application/json
+
+###
+
+### 3. Get Asset by ID (Cash Test)
+GET {{WealthBackend_HostAddress}}/api/assets/qJfnKleFCUW6rlYsKEGiEA
+Accept: application/json
+
+###
+
+### 4. Get Asset by ID (Crypto Test)
+GET {{WealthBackend_HostAddress}}/api/assets/5t6tl3l0HUmjR9024mqBVA
+Accept: application/json
+
+###
+
+### 5. Get Asset by ID (Investment Account)
+GET {{WealthBackend_HostAddress}}/api/assets/b33J05h1jkaSuAEmWMPXaw
+Accept: application/json
+
+###
+
+### 6. Historical Query - After all imported records (April 2025)
+GET {{WealthBackend_HostAddress}}/api/assets/historical?asOfDate=2025-04-01T00:00:00
+Accept: application/json
+
+###
+
+### 7. Historical Query - Around import date (March 28, 2025)
+GET {{WealthBackend_HostAddress}}/api/assets/historical?asOfDate=2025-03-28T12:00:00
+Accept: application/json
+
+###
+
+### 8. Historical Query - Before all records (January 2025)
+GET {{WealthBackend_HostAddress}}/api/assets/historical?asOfDate=2025-01-01T00:00:00
+Accept: application/json
+
+###
+
+### 9. Get Asset by ID - Not Found Test
+GET {{WealthBackend_HostAddress}}/api/assets/invalid-id-12345
 Accept: application/json
 
 ###
