@@ -62,9 +62,6 @@ namespace WealthBackend.Services
                     };
                     _context.AssetBalanceHistories.Add(historyRecord);
 
-                    // Create additional historical records for testing point-in-time queries
-                    await CreateSampleHistoricalRecords(asset);
-
                     importedCount++;
                 }
 
@@ -78,32 +75,6 @@ namespace WealthBackend.Services
                 _logger.LogError(ex, "Error importing assets from JSON");
                 throw;
             }
-        }
-
-        private async Task CreateSampleHistoricalRecords(Asset asset)
-        {
-            // Create 2 historical records for testing point-in-time queries
-            var baseDate = asset.BalanceAsOf;
-
-            // Record from 30 days ago
-            var history1 = new AssetBalanceHistory
-            {
-                AssetId = asset.Id,
-                Balance = asset.BalanceCurrent * 0.90m, // 90% of current value
-                BalanceAsOf = baseDate.AddDays(-30),
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.AssetBalanceHistories.Add(history1);
-
-            // Record from 60 days ago
-            var history2 = new AssetBalanceHistory
-            {
-                AssetId = asset.Id,
-                Balance = asset.BalanceCurrent * 0.80m, // 80% of current value
-                BalanceAsOf = baseDate.AddDays(-60),
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.AssetBalanceHistories.Add(history2);
         }
 
         private string GetStringProperty(JsonElement element, string propertyName)
