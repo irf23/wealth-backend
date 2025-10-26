@@ -222,6 +222,7 @@ With more time I'd add proper error handling middleware with logging, input vali
 I tested all the endpoints manually with curl. The `WealthBackend.http` file has a bunch of test requests you can run if you're using VS Code or JetBrains.
 
 Key tests that worked:
+
 - Historical query before any records (Jan 1, 2025) returns `[]`
 - Historical query after records (Apr 1, 2025) returns all 6 assets with their most recent balances
 - GET by ID returns 404 for invalid IDs
@@ -255,16 +256,17 @@ wealth-backend/
 This was built in about 90 minutes, so there are some obvious gaps:
 
 **Core stuff I'd add next:**
+
 - Input validation (DateTime parsing for the historical endpoint could be better)
 - Pagination on GET /api/assets
 - Actual unit tests instead of just manual curl testing
-- Swagger UI endpoint for easier API exploration
+- Swagger UI (OpenAPI is configured, just needs UI middleware)
 
 **Why REST instead of GraphQL:**
 The assignment said GraphQL was preferred, but I haven't used it before. I could've spent 30 minutes learning HotChocolate, but that would've meant less time on getting the historical balance query right. The query logic works the same whether it's REST or GraphQL—I just chose to focus on correctness.
 
 **Production concerns:**
+
 - SQLite is fine for a demo but wouldn't handle any real concurrency
-- No auth, no rate limiting, basic error handling
-- The import isn't idempotent (run it twice = duplicate data)
+- No auth, no rate limiting
 - Historical query does in-memory grouping which works for 6 assets but would need optimization at scale
